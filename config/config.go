@@ -7,8 +7,15 @@ import (
 
 type Config struct {
 	MarketState MarketStateConfig `mapstructure:"marketState"`
+	Binance     BinanceConfig     `mapstructure:"binance"` // 新增
 }
 
+type BinanceConfig struct {
+	ApiKey        string `mapstructure:"apiKey"`
+	SecretKey     string `mapstructure:"secretKey"`
+	TradeSymbol   string `mapstructure:"tradeSymbol"`
+	KlineInterval string `mapstructure:"klineInterval"`
+}
 type MarketStateConfig struct {
 	ShortMAPeriod int     // 短期移动平均线的计算周期
 	LongMAPeriod  int     // 长期移动平均线的计算周期

@@ -4,3 +4,9 @@ marketState:
   longMAPeriod: 60
   adxPeriod: 14
   adxThreshold: 25.0
+# 币安平台API配置
+binance:
+  apiKey: "YOUR_API_KEY"      # 在这里填入你的 API Key
+  secretKey: "YOUR_SECRET_KEY" # 在这里填入你的 Secret Key
+  tradeSymbol: "BTCUSDT"       # 交易对
+  klineInterval: "15m"         # K线周期 (例如: 1m, 5m, 15m, 1h)

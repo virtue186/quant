@@ -61,7 +61,7 @@ func DetermineState(klines []*binance.Kline, config *config.Config) MarketState 
 
 	adxValues := talib.Adx(highPrices, lowPrices, closePrices, config.MarketState.ShortMAPeriod)
 	smaShort := talib.Sma(closePrices, config.MarketState.ShortMAPeriod)
-	smaLong := talib.Sma(closePrices, config.MarketState.ShortMAPeriod)
+	smaLong := talib.Sma(closePrices, config.MarketState.LongMAPeriod)
 	if adxValues == nil {
 		log.Println("ADX 指标计算失败。")
 		return StateUnsure
