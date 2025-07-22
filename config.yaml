@@ -1,0 +1,6 @@
+# 市场状态判断的参数
+marketState:
+  shortMAPeriod: 20
+  longMAPeriod: 60
+  adxPeriod: 14
+  adxThreshold: 25.0
