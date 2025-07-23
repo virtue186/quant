@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"github.com/markcheno/go-talib"
+	"github.com/quant/binance"
+	"github.com/quant/config"
 	"log"
 )
 
 func main() {
-	// 示例的收盘价数据
-	closePrices := []float64{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}
-
-	// 计算 5 日简单移动平均线 (SMA)
-	sma := talib.Sma(closePrices, 5)
-	if sma == nil {
-		log.Fatal("SMA calculation failed")
+	// 加载配置
+	cfg, err := config.LoadConfig(".")
+	if err != nil {
+		log.Printf("Error loading config: %v", err)
 	}
+	// 初始化币安客户端
+	binanceClient := binance.NewClient(cfg.Binance)
+	log.Println("币安客户端初始化成功。")
+	binanceClient.NewKlinesService()
 
-	fmt.Println("5-day SMA:", sma)
 }

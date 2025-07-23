@@ -33,11 +33,13 @@ func (s MarketState) String() string {
 	}
 }
 
-func DetermineState(klines []*binance.Kline, config *config.Config) MarketState {
-	requiredDataLen := config.MarketState.LongMAPeriod
-	if config.MarketState.ADXPeriod > requiredDataLen {
-		requiredDataLen = config.MarketState.ADXPeriod
+func DetermineState(klines []*binance.Kline, conf *config.MarketStateConfig) MarketState {
+	// 确定计算所需的最少数据量
+	requiredDataLen := conf.LongMAPeriod
+	if conf.ADXPeriod > requiredDataLen {
+		requiredDataLen = conf.ADXPeriod
 	}
+
 	if len(klines) <= requiredDataLen {
 		log.Printf("数据长度不足 %d，无法进行市场状态判断。", requiredDataLen)
 		return StateUnsure
@@ -48,43 +50,54 @@ func DetermineState(klines []*binance.Kline, config *config.Config) MarketState 
 	closePrices := make([]float64, len(klines))
 	for i, k := range klines {
 		var errH, errL, errC error
-		// 将 string 转换为 float64
 		highPrices[i], errH = strconv.ParseFloat(k.High, 64)
 		lowPrices[i], errL = strconv.ParseFloat(k.Low, 64)
 		closePrices[i], errC = strconv.ParseFloat(k.Close, 64)
 
 		if errH != nil || errL != nil || errC != nil {
 			log.Printf("数据点解析失败 at index %d: High='%s', Low='%s', Close='%s'. 无法继续分析。", i, k.High, k.Low, k.Close)
-			return StateUnsure // 遇到无法解析的数据，立即返回不确定状态
+			return StateUnsure
 		}
 	}
 
-	adxValues := talib.Adx(highPrices, lowPrices, closePrices, config.MarketState.ShortMAPeriod)
-	smaShort := talib.Sma(closePrices, config.MarketState.ShortMAPeriod)
-	smaLong := talib.Sma(closePrices, config.MarketState.LongMAPeriod)
-	if adxValues == nil {
-		log.Println("ADX 指标计算失败。")
-		return StateUnsure
-	}
-	if smaShort == nil || smaLong == nil {
-		log.Println("SMA 指标计算失败。")
+	// **【关键修复】** 使用配置文件中正确的 adxPeriod
+	adxValues := talib.Adx(highPrices, lowPrices, closePrices, conf.ADXPeriod)
+	smaShort := talib.Sma(closePrices, conf.ShortMAPeriod)
+	smaLong := talib.Sma(closePrices, conf.LongMAPeriod)
+
+	if adxValues == nil || smaShort == nil || smaLong == nil {
+		log.Println("技术指标计算失败 (ADX 或 SMA 返回 nil)。")
 		return StateUnsure
 	}
 
+	// 获取指标的最后一个有效值
 	lastIndex := len(closePrices) - 1
-	lastSmaShort := smaShort[lastIndex]
-	lastSmaLong := smaLong[lastIndex]
-	lastADX := adxValues[lastIndex]
+	lastADX := adxValues[len(adxValues)-1]
+	lastSmaShort := smaShort[len(smaShort)-1]
+	lastSmaLong := smaLong[len(smaLong)-1]
 
-	if lastADX < config.MarketState.ADXThreshold {
+	log.Printf("市场状态判断指标详情 (K线时间: %s):", klines[lastIndex].CloseTime)
+	log.Printf("  - 最新收盘价: %s", klines[lastIndex].Close)
+	log.Printf("  - ADX(%d) 值: %.2f (阈值: %.2f)", conf.ADXPeriod, lastADX, conf.ADXThreshold)
+	log.Printf("  - 短期SMA(%d) 值: %.2f", conf.ShortMAPeriod, lastSmaShort)
+	log.Printf("  - 长期SMA(%d) 值: %.2f", conf.LongMAPeriod, lastSmaLong)
+
+	// 核心判断逻辑
+	// 1. 使用ADX判断趋势强度
+	if lastADX < conf.ADXThreshold {
+		log.Println("判断结果: ADX值低于阈值，市场处于震荡状态。")
 		return StateRange
 	}
 
+	// 2. 若ADX表明存在趋势，则使用均线判断趋势方向
 	if lastSmaShort > lastSmaLong {
+		log.Println("判断结果: ADX值高于阈值且短期均线上穿长期均线，市场处于牛市趋势。")
 		return StateBull
 	} else if lastSmaShort < lastSmaLong {
+		log.Println("判断结果: ADX值高于阈值且短期均线下穿长期均线，市场处于熊市趋势。")
 		return StateBear
 	}
 
+	log.Println("判断结果: 指标条件不明确，市场状态不确定。")
 	return StateUnsure
 }
