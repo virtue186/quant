@@ -1,20 +1,21 @@
 package main
 
 import (
-	"github.com/quant/binance"
 	"github.com/quant/config"
+	"github.com/quant/trader"
 	"log"
 )
 
 func main() {
-	// 加载配置
-	cfg, err := config.LoadConfig(".")
+	// 1. 加载配置
+	cfg, err := config.LoadConfig("./config/")
 	if err != nil {
-		log.Printf("Error loading config: %v", err)
+		log.Fatalf("错误：无法加载配置: %v", err)
 	}
-	// 初始化币安客户端
-	binanceClient := binance.NewClient(cfg.Binance)
-	log.Println("币安客户端初始化成功。")
-	binanceClient.NewKlinesService()
+	log.Println("配置加载成功。")
+
+	// 2. 初始化并运行交易引擎
+	engine := trader.NewEngine(cfg)
+	engine.Run()
 
 }

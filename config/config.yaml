@@ -1,0 +1,32 @@
+# 市场状态判断的参数
+marketState:
+  shortMAPeriod: 20
+  longMAPeriod: 60
+  adxPeriod: 14
+  adxThreshold: 20.0
+  # MACD指标参数
+  macdFastPeriod: 12
+  macdSlowPeriod: 26
+  macdSignalPeriod: 9
+
+  adxDeclineBars: 2
+
+# 币安平台API配置
+binance:
+  apiKey: "YOUR_API_KEY"
+  secretKey: "YOUR_SECRET_KEY"
+  tradeSymbol: "DOGEUSDT"
+  klineInterval: "1h"
+
+# 滚仓策略参数 (针对1h周期优化)
+rollerStrategy:
+  atrPeriod: 14               # ATR周期通常保持默认
+  atrMultiplier: 3.0          # 3倍ATR止损，为DOGE的波动性提供足够空间
+  entryEmaShortPeriod: 12     # 经典的12/26组合，适用于多数周期
+  entryEmaLongPeriod: 26
+  volumeSmaPeriod: 20         # 成交量均线周期
+  volumeMultiplier: 1.5       # 成交量放大倍数，是很好的趋势确认信号
+
+  # 【重要优化】调整滚仓触发条件
+  rollProfitThreshold: 0.15   # 浮动盈利达到15%时考虑滚仓。50%过于理想化，很难触发。
+  rollCheckPriceGap: 0.10     # 盈利超过阈值后，价格需比上次加仓点再涨10%才触发，防止在平台期反复加仓

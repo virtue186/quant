@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	MarketState MarketStateConfig `mapstructure:"marketState"`
-	Binance     BinanceConfig     `mapstructure:"binance"` // 新增
+	MarketState    MarketStateConfig    `mapstructure:"marketState"`
+	Binance        BinanceConfig        `mapstructure:"binance"` // 新增
+	RollerStrategy RollerStrategyConfig `mapstructure:"rollerStrategy"`
 }
 
 type BinanceConfig struct {
@@ -17,10 +18,25 @@ type BinanceConfig struct {
 	KlineInterval string `mapstructure:"klineInterval"`
 }
 type MarketStateConfig struct {
-	ShortMAPeriod int     // 短期移动平均线的计算周期
-	LongMAPeriod  int     // 长期移动平均线的计算周期
-	ADXPeriod     int     // ADX指标的计算周期
-	ADXThreshold  float64 // 判断市场是否进入震荡市的ADX阈值
+	ShortMAPeriod    int     // 短期移动平均线的计算周期
+	LongMAPeriod     int     // 长期移动平均线的计算周期
+	ADXPeriod        int     // ADX指标的计算周期
+	ADXThreshold     float64 // 判断市场是否进入震荡市的ADX阈值
+	MacdFastPeriod   int     `mapstructure:"macdFastPeriod"`
+	MacdSlowPeriod   int     `mapstructure:"macdSlowPeriod"`
+	MacdSignalPeriod int     `mapstructure:"macdSignalPeriod"`
+	AdxDeclineBars   int     `mapstructure:"adxDeclineBars"`
+}
+
+type RollerStrategyConfig struct {
+	AtrPeriod           int     `mapstructure:"atrPeriod"`
+	AtrMultiplier       float64 `mapstructure:"atrMultiplier"`
+	EntryEmaShortPeriod int     `mapstructure:"entryEmaShortPeriod"`
+	EntryEmaLongPeriod  int     `mapstructure:"entryEmaLongPeriod"`
+	VolumeSmaPeriod     int     `mapstructure:"volumeSmaPeriod"`
+	VolumeMultiplier    float64 `mapstructure:"volumeMultiplier"`
+	RollProfitThreshold float64 `mapstructure:"rollProfitThreshold"`
+	RollCheckPriceGap   float64 `mapstructure:"rollCheckPriceGap"`
 }
 
 var Cfg *Config
@@ -31,6 +47,7 @@ func LoadConfig(path string) (*Config, error) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath(path)
 	// 支持环境变量替换配置文件参数
+	v.SetEnvPrefix("QUANT")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
